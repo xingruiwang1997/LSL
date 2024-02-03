@@ -1,0 +1,60 @@
+【Game Development】Week2 笔记
+
+【功能1】2D物体框内移动：
+
+public class C_3_2DSquareMoveClamp : MonoBehaviour
+{
+    //GetAxis Horizontal&Vertical 
+    private float LSL_AD;
+    private float LSL_WS;
+    //LSL: Speed 
+    [SerializeField] private float LSL_Speed = 1.0f; 
+    //camera.main.orthographics 
+    float LSL_CameraX;
+    float LSL_CameraY;
+    // Mathf.Clamp 
+    float LSL_XClamp;
+    float LSL_YClamp;
+    //New Vector3 Position
+    Vector3 LSL_NewPosition;
+
+    void Start()
+    {
+        LSL_GetCameraOrthographic();
+        LSL_DebugCameraOrthographic();
+    }
+
+    void Update()
+    {
+        LSL_GetAxis();
+        LSL_SetXY_Clamp();
+        LSL_ToClamp(); 
+    }
+
+    //CUSTOM VOID
+    void LSL_GetCameraOrthographic()
+    {
+        LSL_CameraX=Camera.main.orthographicSize*Camera.main.aspect;
+        LSL_CameraY=Camera.main.orthographicSize; 
+    }
+    void LSL_DebugCameraOrthographic()//DEBUG
+    {
+        Debug.Log("The X is:"+LSL_CameraX);
+        Debug.Log("The Y is:"+LSL_CameraY);
+    }
+    void LSL_GetAxis()
+    { 
+    LSL_AD=Input.GetAxis("Horizontal");
+    LSL_WS=Input.GetAxis("Vertical");  
+    }    
+    void LSL_SetXY_Clamp()
+    { 
+    LSL_XClamp=Mathf.Clamp(value:transform.position.x+LSL_AD*LSL_Speed*Time.deltaTime,min:-LSL_CameraX+0.5f,max:LSL_CameraX-0.5f);//+0.5f
+    LSL_YClamp=Mathf.Clamp(value:transform.position.y+LSL_WS*LSL_Speed*Time.deltaTime,min:-LSL_CameraY+0.5f,max:LSL_CameraY-0.5f);
+    LSL_NewPosition=new Vector3(LSL_XClamp,LSL_YClamp,0);//Set Position
+    }
+    void LSL_ToClamp()
+    {
+     transform.position =LSL_NewPosition;
+    }
+  }
