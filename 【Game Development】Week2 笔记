@@ -58,3 +58,60 @@ public class C_3_2DSquareMoveClamp : MonoBehaviour
      transform.position =LSL_NewPosition;
     }
   }
+
+【功能2】2D物体Game边框鬼打墙：
+public class C_2_2DSquareMoveLoop : MonoBehaviour
+{   
+    //GetAxis Horizontal&Vertical 
+    private float LSL_AD;
+    private float LSL_WS;
+    //LSL: Speed 
+    [SerializeField] private float LSL_Speed = 1.0f; 
+    //camera.main.orthographics 
+    float LSL_CameraX;
+    float LSL_CameraY;
+    //New Vector3 Position
+    Vector3 LSL_NewPosition;
+
+    void Start()
+    {
+     LSL_GetCameraOrthographic();
+     LSL_DebugCameraOrthographic();
+    }
+
+    void Update()
+    {
+    LSL_GetAxis();
+    LSL_NewPosition =transform.position + new Vector3(x:LSL_AD,y:LSL_WS,z:0);
+    LSL_ToPosition();
+    LSL_Loop();
+   } 
+
+    //CUSTOM VOID
+    void LSL_Loop()
+    { 
+    if      (transform.position.x > LSL_CameraX)  transform.position = new Vector3 (x:-LSL_CameraX ,y:transform.position.y,z:0);
+    else if (transform.position.x < -LSL_CameraX) transform.position = new Vector3 (x:LSL_CameraX ,y:transform.position.y,z:0);
+    else if (transform.position.y > LSL_CameraY)  transform.position = new Vector3 (x:transform.position.x ,y:-LSL_CameraY,z:0); 
+    else if (transform.position.y < -LSL_CameraY) transform.position = new Vector3 (x:transform.position.x ,y:LSL_CameraY,z:0);
+    }
+    void LSL_GetCameraOrthographic()
+    {
+        LSL_CameraX=Camera.main.orthographicSize*Camera.main.aspect;
+        LSL_CameraY=Camera.main.orthographicSize; 
+    }
+    void LSL_DebugCameraOrthographic()//DEBUG
+    {
+        Debug.Log("The X is:"+LSL_CameraX);
+        Debug.Log("The Y is:"+LSL_CameraY);
+    }
+    void LSL_GetAxis()
+    { 
+    LSL_AD=Input.GetAxis("Horizontal");
+    LSL_WS=Input.GetAxis("Vertical");  
+    }    
+    void LSL_ToPosition()
+    {
+     transform.position =LSL_NewPosition;
+    }
+  }
