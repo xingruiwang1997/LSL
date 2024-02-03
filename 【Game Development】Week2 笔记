@@ -1,6 +1,6 @@
 【Game Development】Week2 笔记
 
-【功能1】2D物体框内移动：
+【功能1】2D物体Game框内移动：
 
 public class C_3_2DSquareMoveClamp : MonoBehaviour
 {
