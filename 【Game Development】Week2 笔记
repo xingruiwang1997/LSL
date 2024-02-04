@@ -1,21 +1,21 @@
 【Game Development】Week2 笔记
 
-【功能1】2D物体Game框内移动：
+【功能1】2D物体Game框内移动：必须是orthographic的摄像机
 
 public class C_3_2DSquareMoveClamp : MonoBehaviour
 {
-    //GetAxis Horizontal&Vertical 
+    //GetAxis Horizontal&Vertical Get到GetAxis的AWSD量，这个值从-1到1
     private float LSL_AD;
     private float LSL_WS;
-    //LSL: Speed 
+    //LSL: Speed 自定义一个speed 变量
     [SerializeField] private float LSL_Speed = 1.0f; 
-    //camera.main.orthographics 
+    //camera.main.orthographics Get到Camera的orthographic变量
     float LSL_CameraX;
     float LSL_CameraY;
-    // Mathf.Clamp 
+    // Mathf.Clamp 定义Vector3里面的X值和Y值
     float LSL_XClamp;
     float LSL_YClamp;
-    //New Vector3 Position
+    //New Vector3 Position 一个全新的Vector3值，用来transform.trtanslate
     Vector3 LSL_NewPosition;
 
     void Start()
@@ -32,34 +32,36 @@ public class C_3_2DSquareMoveClamp : MonoBehaviour
     }
 
     //CUSTOM VOID
-    void LSL_GetCameraOrthographic()
+    void LSL_GetCameraOrthographic() //orthographic的值，一般是5.
     {
-        LSL_CameraX=Camera.main.orthographicSize*Camera.main.aspect;
+        LSL_CameraX=Camera.main.orthographicSize*Camera.main.aspect; //5乘以长宽比，得到横坐标
         LSL_CameraY=Camera.main.orthographicSize; 
     }
-    void LSL_DebugCameraOrthographic()//DEBUG
+    void LSL_DebugCameraOrthographic()//DEBUG可忽略
     {
         Debug.Log("The X is:"+LSL_CameraX);
         Debug.Log("The Y is:"+LSL_CameraY);
     }
-    void LSL_GetAxis()
+    void LSL_GetAxis() //Get ASWD的移动量
     { 
     LSL_AD=Input.GetAxis("Horizontal");
     LSL_WS=Input.GetAxis("Vertical");  
     }    
     void LSL_SetXY_Clamp()
     { 
+    //计算得到 新的XY的值 
     LSL_XClamp=Mathf.Clamp(value:transform.position.x+LSL_AD*LSL_Speed*Time.deltaTime,min:-LSL_CameraX+0.5f,max:LSL_CameraX-0.5f);//+0.5f
     LSL_YClamp=Mathf.Clamp(value:transform.position.y+LSL_WS*LSL_Speed*Time.deltaTime,min:-LSL_CameraY+0.5f,max:LSL_CameraY-0.5f);
+    //并赋予给新的position Vector3
     LSL_NewPosition=new Vector3(LSL_XClamp,LSL_YClamp,0);//Set Position
     }
-    void LSL_ToClamp()
+    void LSL_ToClamp() //非常单纯的transforom.translate
     {
      transform.position =LSL_NewPosition;
     }
   }
 
-【功能2】2D物体Game边框鬼打墙：
+【功能2】2D物体Game边框鬼打墙：//不用clamp限制边框，而是使用loop实现鬼打墙
 public class C_2_2DSquareMoveLoop : MonoBehaviour
 {   
     //GetAxis Horizontal&Vertical 
@@ -79,11 +81,10 @@ public class C_2_2DSquareMoveLoop : MonoBehaviour
      LSL_DebugCameraOrthographic();
     }
 
-    void Update()
+    void Update() //直接赋值AWSD移动位置，并Loop即可
     {
     LSL_GetAxis();
-    LSL_NewPosition =transform.position + new Vector3(x:LSL_AD,y:LSL_WS,z:0);
-    LSL_ToPosition();
+    transform.Translate=LSL_NewPosition =transform.position + new Vector3(x:LSL_AD,y:LSL_WS,z:0);
     LSL_Loop();
    } 
 
@@ -110,8 +111,6 @@ public class C_2_2DSquareMoveLoop : MonoBehaviour
     LSL_AD=Input.GetAxis("Horizontal");
     LSL_WS=Input.GetAxis("Vertical");  
     }    
-    void LSL_ToPosition()
-    {
-     transform.position =LSL_NewPosition;
-    }
   }
+
+【功能3】射击：在Clamp的基础之上
