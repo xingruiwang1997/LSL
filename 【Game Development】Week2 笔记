@@ -72,8 +72,6 @@ public class C_2_2DSquareMoveLoop : MonoBehaviour
     //camera.main.orthographics 
     float LSL_CameraX;
     float LSL_CameraY;
-    //New Vector3 Position
-    Vector3 LSL_NewPosition;
 
     void Start()
     {
@@ -84,7 +82,7 @@ public class C_2_2DSquareMoveLoop : MonoBehaviour
     void Update() //直接赋值AWSD移动位置，并Loop即可
     {
     LSL_GetAxis();
-    transform.Translate=LSL_NewPosition =transform.position + new Vector3(x:LSL_AD,y:LSL_WS,z:0);
+    transform.Translate(transform.position + new Vector3(x:LSL_AD,y:LSL_WS,z:0));
     LSL_Loop();
    } 
 
