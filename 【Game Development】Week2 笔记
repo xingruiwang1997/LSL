@@ -42,14 +42,14 @@ public class C_3_2DSquareMoveClamp : MonoBehaviour
         Debug.Log("The X is:"+LSL_CameraX);
         Debug.Log("The Y is:"+LSL_CameraY);
     }
-    void LSL_GetAxis() //Get ASWD的移动量
+    void LSL_GetAxis() //Get ASWD的移动量 顺便乘以速度和feame分之一
     { 
     LSL_AD=Input.GetAxis("Horizontal")*LSL_Speed*Time.deltaTime;
     LSL_WS=Input.GetAxis("Vertical")*LSL_Speed*Time.deltaTime;  
     }    
     void LSL_SetXY_Clamp()
     { 
-    //计算得到 新的XY的值 ，由于物体中心到达边框时候，有上面或者下面一半会被切掉，所以这里+ - 0.5调整一下。
+    //计算 加法 得到 新的XY的值 ，由于物体中心到达边框时候，有上面或者下面一半会被切掉，所以这里+ - 0.5调整一下。
     LSL_XClamp=Mathf.Clamp(value:transform.position.x+LSL_AD,min:-LSL_CameraX+0.5f,max:LSL_CameraX-0.5f);//+0.5f
     LSL_YClamp=Mathf.Clamp(value:transform.position.y+LSL_WS,min:-LSL_CameraY+0.5f,max:LSL_CameraY-0.5f);
     //并赋予给新的position Vector3
