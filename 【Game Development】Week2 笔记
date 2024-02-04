@@ -44,14 +44,14 @@ public class C_3_2DSquareMoveClamp : MonoBehaviour
     }
     void LSL_GetAxis() //Get ASWD的移动量
     { 
-    LSL_AD=Input.GetAxis("Horizontal");
-    LSL_WS=Input.GetAxis("Vertical");  
+    LSL_AD=Input.GetAxis("Horizontal")*LSL_Speed*Time.deltaTime;
+    LSL_WS=Input.GetAxis("Vertical")*LSL_Speed*Time.deltaTime;  
     }    
     void LSL_SetXY_Clamp()
     { 
-    //计算得到 新的XY的值 
-    LSL_XClamp=Mathf.Clamp(value:transform.position.x+LSL_AD*LSL_Speed*Time.deltaTime,min:-LSL_CameraX+0.5f,max:LSL_CameraX-0.5f);//+0.5f
-    LSL_YClamp=Mathf.Clamp(value:transform.position.y+LSL_WS*LSL_Speed*Time.deltaTime,min:-LSL_CameraY+0.5f,max:LSL_CameraY-0.5f);
+    //计算得到 新的XY的值 ，由于物体中心到达边框时候，有上面或者下面一半会被切掉，所以这里+ - 0.5调整一下。
+    LSL_XClamp=Mathf.Clamp(value:transform.position.x+LSL_AD,min:-LSL_CameraX+0.5f,max:LSL_CameraX-0.5f);//+0.5f
+    LSL_YClamp=Mathf.Clamp(value:transform.position.y+LSL_WS,min:-LSL_CameraY+0.5f,max:LSL_CameraY-0.5f);
     //并赋予给新的position Vector3
     LSL_NewPosition=new Vector3(LSL_XClamp,LSL_YClamp,0);//Set Position
     }
@@ -61,17 +61,19 @@ public class C_3_2DSquareMoveClamp : MonoBehaviour
     }
   }
 
-【功能2】2D物体Game边框鬼打墙：//不用clamp限制边框，而是使用loop实现鬼打墙
+【功能2】2D物体Game边框鬼打墙：
 public class C_2_2DSquareMoveLoop : MonoBehaviour
 {   
-    //GetAxis Horizontal&Vertical 
+    //GetAxis Horizontal&Vertical //老样子得到AWSD值，-1 到 1
     private float LSL_AD;
     private float LSL_WS;
     //LSL: Speed 
-    [SerializeField] private float LSL_Speed = 1.0f; 
-    //camera.main.orthographics 
+    [SerializeField] private float LSL_Speed = 1.0f;  //自定义速度
+    //camera.main.orthographics 得到摄像机边框坐标
     float LSL_CameraX;
     float LSL_CameraY;
+    //New Vector3 Position
+    Vector3 LSL_NewPosition;
 
     void Start()
     {
@@ -79,36 +81,41 @@ public class C_2_2DSquareMoveLoop : MonoBehaviour
      LSL_DebugCameraOrthographic();
     }
 
-    void Update() //直接赋值AWSD移动位置，并Loop即可
+    void Update()
     {
     LSL_GetAxis();
-    transform.Translate(transform.position + new Vector3(x:LSL_AD,y:LSL_WS,z:0));
+    LSL_NewPosition =transform.position + new Vector3(x:LSL_AD,y:LSL_WS,z:0)*Time.deltaTime; //并且乘以frame分之1
+    LSL_ToPosition();
     LSL_Loop();
    } 
 
     //CUSTOM VOID
-    void LSL_Loop()
+    void LSL_Loop() //到边框的时候实现鬼打墙的loop。
     { 
     if      (transform.position.x > LSL_CameraX)  transform.position = new Vector3 (x:-LSL_CameraX ,y:transform.position.y,z:0);
     else if (transform.position.x < -LSL_CameraX) transform.position = new Vector3 (x:LSL_CameraX ,y:transform.position.y,z:0);
     else if (transform.position.y > LSL_CameraY)  transform.position = new Vector3 (x:transform.position.x ,y:-LSL_CameraY,z:0); 
     else if (transform.position.y < -LSL_CameraY) transform.position = new Vector3 (x:transform.position.x ,y:LSL_CameraY,z:0);
     }
-    void LSL_GetCameraOrthographic()
+    void LSL_GetCameraOrthographic()  //得到摄像机边框的XY坐标值
     {
         LSL_CameraX=Camera.main.orthographicSize*Camera.main.aspect;
         LSL_CameraY=Camera.main.orthographicSize; 
     }
-    void LSL_DebugCameraOrthographic()//DEBUG
+    void LSL_DebugCameraOrthographic()//DEBUG可忽略
     {
         Debug.Log("The X is:"+LSL_CameraX);
         Debug.Log("The Y is:"+LSL_CameraY);
     }
-    void LSL_GetAxis()
+    void LSL_GetAxis() //计算得到物体应该移动的XY值 //乘以速度控制速度
     { 
-    LSL_AD=Input.GetAxis("Horizontal");
-    LSL_WS=Input.GetAxis("Vertical");  
+    LSL_AD=Input.GetAxis("Horizontal")*LSL_Speed;
+    LSL_WS=Input.GetAxis("Vertical")*LSL_Speed;  
     }    
+    void LSL_ToPosition()
+    {
+     transform.position =LSL_NewPosition;
+    }
   }
 
-【功能3】射击：在Clamp的基础之上
+【功能3】射击：在Clamp的基础之上，制作子弹射击功能，子弹必须是prefab状态被player调用
