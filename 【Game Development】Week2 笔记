@@ -1,7 +1,6 @@
 【Game Development】Week2 笔记
 
 【功能1】2D物体Game框内移动：必须是orthographic的摄像机
-
 public class C_3_2DSquareMoveClamp : MonoBehaviour
 {
     //GetAxis Horizontal&Vertical Get到GetAxis的AWSD量，这个值从-1到1
@@ -119,3 +118,115 @@ public class C_2_2DSquareMoveLoop : MonoBehaviour
   }
 
 【功能3】射击：在Clamp的基础之上，制作子弹射击功能，子弹必须是prefab状态被player调用
+【1】Player的script：
+public class C_4_1_2DSquareClone_ClearVersion : MonoBehaviour //Move&Shoot
+{
+    private float LSL_AD;  //GetAxis Horizontal&Vertical 
+    private float LSL_WS;
+    [SerializeField] private float LSL_Speed = 1.0f;  //Speed
+    private Vector3 LSL_NewPosition;  //New Vector3 Position// 个人习惯new Vector3只给已经提前定义好的变量用，避免我自己以后看不懂自己写的东西
+    [SerializeField]private GameObject LSL_GameObjectNeededClone;  //[新1]Clone Object 把需要克隆的prefab 拖入 放在这里
+
+    public float  LSL_CameraX;  //camera.main.orthographics 
+    public float  LSL_CameraY;
+    public float  LSL_XClamp;  // Mathf.Clamp 
+    public float  LSL_YClamp;
+
+    void Start()
+    {
+        LSL_GetCameraOrthographic();
+    }
+
+    void Update()
+    {
+        LSL2_ClampMoveMent();
+        LSL_CloneGameObject();
+    }
+
+    //CUSTOM VOID
+    void LSL_GetCameraOrthographic()//顺便Debug
+    {
+        LSL_CameraX=Camera.main.orthographicSize*Camera.main.aspect;
+        LSL_CameraY=Camera.main.orthographicSize; 
+        Debug.Log("LSL: The CameraX is:"+LSL_CameraX);
+        Debug.Log("LSL: The CameraY is:"+LSL_CameraY);
+    }
+    void LSL_GetAxis()//LSL2_ClampMoveMent[1]
+    { 
+    LSL_AD=Input.GetAxis("Horizontal")*LSL_Speed*Time.deltaTime;
+    LSL_WS=Input.GetAxis("Vertical")*LSL_Speed*Time.deltaTime;  
+    }    
+    void LSL_SetXY_Clamp()//LSL2_ClampMoveMent[2]
+    { 
+    LSL_XClamp=Mathf.Clamp(value:transform.position.x+LSL_AD,min:-LSL_CameraX+0.5f,max:LSL_CameraX-0.5f);//+0.5f
+    LSL_YClamp=Mathf.Clamp(value:transform.position.y+LSL_WS,min:-LSL_CameraY+0.5f,max:LSL_CameraY-0.5f);
+    LSL_NewPosition=new Vector3(LSL_XClamp,LSL_YClamp,0);//Set Position
+    }
+    void LSL_ToClamp()//LSL2_ClampMoveMent[3]
+    {
+     transform.position =LSL_NewPosition;
+    }
+    void LSL_CloneGameObject() //摁键盘以后克隆某个物体，debug可以忽略 这边在飞船的实时位置克隆一颗子弹prefab
+    {
+        if(Input.GetKeyDown(KeyCode.Return)) //Return == Main Enter Key
+        { 
+            Debug.Log("LSL_Player: [Enter] been pressed!");
+            Instantiate(LSL_GameObjectNeededClone,transform.position,Quaternion.identity);
+        }
+    }
+
+    //CUSTOM VOID LEVEL 2:
+    void LSL2_ClampMoveMent()
+    {
+        LSL_GetAxis();
+        LSL_SetXY_Clamp();
+        LSL_ToClamp(); 
+    }
+}
+
+【2】Laser子弹的Script：
+public class C_4_2_2DSquareforLaser_ClearVersion : MonoBehaviour
+{
+    [SerializeField] private float LSL_Leser_Speed = 10f;//Laser Speed //自定义一个速度
+    //Call Public float
+    private float LSL_aFloat;// get public float from other script on other GameObject //把别处的public 变量的值赋值过来，这里我需要的是CameraY方向上的量，默认为5
+
+    void Start()
+    {
+        LSL_GetPublicVariables();
+    }
+    void Update()
+    {
+        LSL_ShootSelf();
+        LSL_DestroySelf();
+    }
+    //CUSTOM VOIDS
+    void LSL_GetPublicVariables()//这一步是我懒得再找Camera的高度值了，虽然应该是5，但是万一呢？所以player的部分public化，并且在这里调用到它的值
+    { 
+        GameObject LSL_aGameobject = GameObject.Find("A_2D_Sprite_Square1_Player"); //Get the object
+        C_4_1_2DSquareClone_ClearVersion LSL2_aScript =LSL_aGameobject.GetComponent<C_4_1_2DSquareClone_ClearVersion>();//Get the script
+        LSL_aFloat = LSL2_aScript.LSL_CameraY;//Get the CameraY float number  
+    }
+    void LSL_ShootSelf()
+    { 
+        transform.Translate(Vector3.up*LSL_Leser_Speed*Time.deltaTime);//Let Laser Move //写Vector3.up这个Unity自带的东西，就不需要new Vector3啦！（0,1,0）就是Up
+    }
+    void LSL_DestroySelf()
+    { 
+        if(transform.position.y> LSL_aFloat+1) Destroy(this.gameObject); //Destroy Self  越界后自毁系统，所以只能装在debug里面
+    }
+
+        //Unity Void
+    private void OnTriggerEnter2D(Collider2D LSL_collide) //OnTriggerEnter2D是一个内置函数，所以不要改它的名字 Unity自带的void是不需要在start或者update里面call的
+    {
+        if(LSL_collide.gameObject.CompareTag("LSL_enemy")) //进入LSL_enemy的Collider以后触发这个毁灭系统
+        { 
+        Debug.Log("LSL_Player Laser hit the Enemy");  //Debug Log
+        Destroy(LSL_collide.gameObject); //击中敌人后，双方自毁系统
+        Debug.Log("LSL_EnemyGameObject has been Destroyed!");
+        Destroy(this.gameObject);
+        }
+    }
+}
+
+【结束了】
