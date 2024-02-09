@@ -1,0 +1,59 @@
+【AWSD键盘操纵物体rotation代码】：
+using UnityEngine;
+public class C_Rotation_Class : MonoBehaviour
+{
+    //是否启用手搓Quaternion的开关和float V4和V3不能混用
+    [SerializeField] private bool Do_You_Use_Quaternion_To_Set_Rotation=false;
+    [SerializeField] [Range(0,1)]private float x4,y4,z4,w4=1; //[1]My Own Quaternion Value
+    //是否启用transform.Rotate(x,y,z)
+    [SerializeField] private bool Do_You_Use_RotateByTime=false;
+    [SerializeField] [Range(0,360)] private float x3,y3,z3;
+    //用self还是world坐标，不能混用
+    [SerializeField] private bool Do_You_Use_SelfSpace=true;
+    [SerializeField] private bool Do_You_Use_WorldSpace=false;
+    //自加，因为觉得打Time.deltaTime很麻烦
+    private float T;
+    //是否启用AWSD控制旋转，默认开
+    [SerializeField] private bool Do_You_Use_AWSDRotation=true;
+    private float WS;
+    private float AD;
+    private Vector3 AWSDRotation;
+    [SerializeField]private float RotationSpeed=120f;//旋转速度，默认120f
+    //Debug开关 默认关
+    [SerializeField]private bool Debug_Quaternion=false;
+    [SerializeField]private bool Debug_AWSD_GetAxis=false;
+    void Start()
+    {
+    LSL_SetTimedektaTime();//这里赋值一下deltaTime为T，只是我为了码字方便
+    }
+    void Update()//所有方法都写在Custom Void里了，VS软件里点击方法，对应部分会高亮。也可以Ctrl+F直接检索
+    {
+    if(Do_You_Use_Quaternion_To_Set_Rotation){Class2_ResetQuaternion(); Do_You_Use_RotateByTime=false;}//打了勾才能用Quaternion，和Euler不能混用
+    if(Do_You_Use_RotateByTime){Class3_Euler(); Do_You_Use_Quaternion_To_Set_Rotation=false;}//打勾才能有用这个Euler旋转
+    if(Do_You_Use_AWSDRotation){LSL_GetAxisAWSDValue();Class5_AWSDtoRotation(); }//取得AWSD的值，并用AWSD旋转物体
+    //Debug
+    if(Debug_Quaternion)Class1_DebugRotation();//打了勾且 摁空格才能 debug，为了节省算力（因为我电脑是土豆显卡苹果CPU
+    if(Debug_AWSD_GetAxis)Class4_Debug_GetAxis();//打了勾且 摁空格才能 debug，为了节省算力
+    }
+    //Custom Void
+    void Class1_DebugRotation()//DEBUG可忽略
+    {if(Input.GetKey(KeyCode.Space))Debug.Log(transform.rotation);}
+    void Class2_ResetQuaternion()//启用quaternion旋转
+    {transform.rotation=new Quaternion(x4,y4,z4,w4);}
+    void Class3_Euler(){ //启用Euler旋转，可选self或world坐标
+    if(Do_You_Use_SelfSpace){transform.Rotate(x3*T,y3*T,z3*T,Space.Self);Do_You_Use_WorldSpace=false;} //Multiply Time.deltaTime 这个用于不停的旋转
+    if(Do_You_Use_WorldSpace){transform.Rotate(x3*T,y3*T,z3*T,Space.World); Do_You_Use_SelfSpace=false;}}//勾选选择world或者self坐标
+    void LSL_SetTimedektaTime(){ //自用为了 因为觉得打Time.deltaTime很麻烦
+     T=Time.deltaTime;}
+    void Class4_Debug_GetAxis() {//Debug可忽略
+    if (Input.GetKey(KeyCode.Space)) { 
+    Debug.Log("WS Key Input:"+Input.GetAxis("Vertical"));  
+    Debug.Log("AD Key Input:"+Input.GetAxis("Horizontal"));}}
+    void LSL_GetAxisAWSDValue() {//Get到AWSD输入值；Unity自带输入系统
+    WS=Input.GetAxis("Vertical");
+    AD=Input.GetAxis("Horizontal");}
+    void Class5_AWSDtoRotation() { //用AWSD值影响物体V3_rotate
+    AWSDRotation=new Vector3(0,-AD,WS);
+   if(Do_You_Use_SelfSpace){transform.Rotate(AWSDRotation*RotationSpeed*T, Space.Self);Do_You_Use_WorldSpace=false;}
+   if(Do_You_Use_WorldSpace){transform.Rotate(AWSDRotation*RotationSpeed*T, Space.World);Do_You_Use_SelfSpace=false;}}
+}
