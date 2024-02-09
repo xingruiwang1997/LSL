@@ -96,7 +96,7 @@ public class C_TargetMove_Class : MonoBehaviour
     Oz=transform.position.z; NOz=Oz;
     LSL_SetFinalPosition();}
     void LSL_SetTimeTime(){ //自用为了 因为觉得打Time.Time很麻烦
-    T=Time.time;
+    T=Time.time;//Mathf.PingPong使用的是Time.time而不是deltatime
     if(DebugTime)Debug.Log("LSL：Time="+T);}//开关控制是否debugtime
     void C1_PingPong(){ //condition ? consequence : alternative 做条件判断
     //方法1
