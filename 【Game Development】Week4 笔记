@@ -23,11 +23,11 @@ public class C_Rotation_Class : MonoBehaviour
     [SerializeField]private bool Debug_Quaternion=false;
     [SerializeField]private bool Debug_AWSD_GetAxis=false;
     void Start()
-    {
-    LSL_SetTimedektaTime();//这里赋值一下deltaTime为T，只是我为了码字方便
+    {//啥也没有
     }
     void Update()//所有方法都写在Custom Void里了，VS软件里点击方法，对应部分会高亮。也可以Ctrl+F直接检索
     {
+    LSL_SetTimedektaTime();//这里赋值一下deltaTime为T，只是我为了码字方便
     if(Do_You_Use_Quaternion_To_Set_Rotation){Class2_ResetQuaternion(); Do_You_Use_RotateByTime=false;}//打了勾才能用Quaternion，和Euler不能混用
     if(Do_You_Use_RotateByTime){Class3_Euler(); Do_You_Use_Quaternion_To_Set_Rotation=false;}//打勾才能有用这个Euler旋转
     if(Do_You_Use_AWSDRotation){LSL_GetAxisAWSDValue();Class5_AWSDtoRotation(); }//取得AWSD的值，并用AWSD旋转物体
