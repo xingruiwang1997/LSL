@@ -124,3 +124,124 @@ public class C_TargetMove_Class : MonoBehaviour
     void LSL_SetFinalPosition(){
     Fx=Ox;Fy=Oy;Fz=Oz;}
 }
+
+【PingPong和旋转混用代码】：
+using System;
+using System.Xml.Serialization;
+using UnityEngine;
+public class C_TargetMove_Class : MonoBehaviour
+{
+    [Header("PingPong")]//[√]PingPong运动 距离&速度手调
+    [SerializeField] private bool IF_PingPongMovement=false;//[√]是否开启pingpong运动？默认不开
+    [SerializeField] private float PingPongSpeed=2f;//[√]手调 pingpong运动速度
+    [SerializeField] private Vector3 OriginalPosition;//[√]手调物体的pingpong初始位置 voidStart后会被赋值，然后可以手调改变它的pingpong起始位置
+    private Vector3 PingPongPosition;//[√]最终的xyz值
+    private Vector3 ResetPosition;//[√]RESET 用
+    //方法1和2 两者不能混用↓[√]
+    [Header("PingPongMethod01")]//[√]方法1
+    [SerializeField] private bool Use_Length=true;//[√]是否用位置调整?
+    [SerializeField] private Vector3 Length;//[√]手调 XYZ分别的pingpong距离 默认0，也就是不动
+    float x,y,z;
+    [Header("PingPongMethod02")]//[√]方法2 这个没法和RotateAround混用 因为RotateAround会一直改变物体pingpong的初始位置
+    [SerializeField] private bool Use_FinalPosition=false;//[√]是否用最终距离调整？默认关闭
+    [SerializeField] private Vector3 FinalPosition;//[√]手调最终的位置 默认和开始位置一样，所以默认不动 可以用加法调之类的，蛮难用的
+    private bool IsOxyzChanged=false;//[√]用来把OriginalPosition手调的值赋给FinalPosition，方便后面调整
+    private Vector3 ChangedPosition;//[√] 赋值FinalPosition用
+    private float T,Td;//[√]自用，因为觉得打Time.Time、deltaTime很麻烦
+    [Header("RotateAround")]//[√]可以和PingPong混用的太阳系旋转 哈哈这是我自己发明的可以和pingpong混用的旋转！！
+    [SerializeField] private bool IF_RotateAround = false;//[√]这个可以和Pingpong混用，原理是引入一个虚拟物体，储存虚拟物体的position值赋值给pingpong 
+    [SerializeField] private Transform Target_Transform;//[√]Get到填入GameObj的transform组件 记得拖入
+    [SerializeField] private float RotateSpeed = 100f;//[√]旋转速度
+    [SerializeField] private float RotateRadious;//[√]还可以调整转动半径
+    private bool ResetRadious=false;//让初始半径与初始物体位置吻合
+    [SerializeField][Range(0, 1)] private int AxisX, AxisY, AxisZ = 0;//[√]调整转动的轴向，只有开关，没有中间值,因为不想用布尔，所以0-1.横向旋转的话，是打开Y
+    private Vector3 RotateAxis;//[√]同上
+    private bool IsTemCreated = false;//[√]如果没有创建物体的话，就创建一个新的物体
+    private Transform TemObj;//[√]新建一个虚拟物体并存储它的位置
+    private Vector3 TemPosition;//[√]虚拟物体的旋转位置，需要得到它的角度
+    private Vector3 RotatePosition;//[√]加上darious赋值给本物体this
+    [Header("Reset")]
+    [SerializeField] private bool ResetEverything = false;//[√]一个还原初始位置的按钮 摁这个按钮用来重置位置
+    private bool Reset = false;//[√]
+    private Quaternion ResetQUaternion;//[√]顺便把旋转角也还原了
+    
+    void Start()//【VOID START】
+    {
+    LSL_SetOriginalPosition();//[√]取得初始坐标
+    }
+    void Update()//【VOID Update】
+    {
+    LSL_SetTimeTime();//这里赋值一下Time.Time为T，只是我为了码字方便 需要每帧更新
+    if(IF_PingPongMovement)C1_PingPong();//勾选后开启PingPong运动
+    LSL_TemObject();//条件判断在void里面
+    if((Use_FinalPosition||Use_Length)&&IF_PingPongMovement)transform.position=PingPongPosition;//赋值位置 pingpong也开了，因为rotate的值会赋给OriginalPosition，所以就是Pingpong的值
+    else if(IF_RotateAround)transform.position=RotatePosition;//赋值位置 rotate开了，那就是rotate的值
+    if(ResetEverything)LSL_Reset();//重置物体
+    }
+    //CUSTOM VOIDS
+    void LSL_SetOriginalPosition(){//Start里用的，不管玩家做什么，这个都得有
+    OriginalPosition=transform.position;
+    FinalPosition=transform.position;
+    ChangedPosition=transform.position;
+    ResetPosition=transform.position;
+    ResetQUaternion=transform.rotation;}
+    void LSL_SetTimeTime(){ //自用为了 因为觉得打Time.Time很麻烦
+    T=Time.time;//Mathf.PingPong使用的是Time.time而不是deltatime
+    Td=Time.deltaTime;}
+    void C_PingPongMethod1() {//方法1 好用！//两种设定pingpong最终距离的方式，随便用那种都可以，但是2者不能混用
+    Use_FinalPosition=false;//防冲突
+    x=Length.x==0?OriginalPosition.x:Mathf.PingPong(t:PingPongSpeed*T, length:Length.x)+OriginalPosition.x;//为了防止公式太长，分开写
+    y=Length.y==0?OriginalPosition.y:Mathf.PingPong(t:PingPongSpeed*T, length:Length.y)+OriginalPosition.y;//YMove=0的话，Pingpong的结果是NaN，所以直接赋值Oy，否则计算Pingpong
+    z=Length.z==0?OriginalPosition.z:Mathf.PingPong(t:PingPongSpeed*T, length:Length.z)+OriginalPosition.z;
+    PingPongPosition=new Vector3(x,y,z);}//设定我的PingPong Position
+    void C_PingPongMethod2() {//方法2 难用！//如果用最终位置调整的话，那么就Fx设定为Ox，最终位置默认=初始位置
+    Use_Length = false;
+    IF_RotateAround=false;//防冲突 //防冲突 这个方法的初始位置一直在更新，如果rotate开了的话，所以很难调整，不能混用
+    LSL_ChangeFtoO();//！需要考虑到 OriginalPosition 被我手动调整的情况，如果改变了初始位置O，最终位置F也一起改变
+    x=FinalPosition.x==OriginalPosition.x?OriginalPosition.x:Mathf.PingPong(t:PingPongSpeed*T,length:FinalPosition.x-OriginalPosition.x)+OriginalPosition.x;
+    y=FinalPosition.y==OriginalPosition.y?OriginalPosition.y:Mathf.PingPong(t:PingPongSpeed*T,length:FinalPosition.y-OriginalPosition.y)+OriginalPosition.y;
+    z=FinalPosition.z==OriginalPosition.z?OriginalPosition.z:Mathf.PingPong(t:PingPongSpeed*T,length:FinalPosition.z-OriginalPosition.z)+OriginalPosition.z;
+    PingPongPosition=new Vector3(x,y,z);}
+    void LSL_ChangeFtoO(){//只有当Oxyz变了的时候，才会重新赋值Fxyz 如果rotate开启，则不会赋值
+    if (ChangedPosition!=OriginalPosition)IsOxyzChanged = true;
+    if (IsOxyzChanged){
+     FinalPosition=OriginalPosition;
+     ChangedPosition=OriginalPosition;
+     IsOxyzChanged = false;}}
+    void C1_PingPong(){ //condition ? consequence : alternative 做条件判断
+    if (Use_Length) C_PingPongMethod1(); 
+    else if (Use_FinalPosition)C_PingPongMethod2();}
+    void LSL_TemObject() {
+     if(IF_RotateAround){//那么我要创建物体，
+      if(IsTemCreated == false) { 
+     TemObj = new GameObject().transform;//新建一个虚拟物体
+     TemObj.position = transform.position;//并让虚拟物体的位置与本物体相同
+     IsTemCreated = true;}//然后就别创建了
+     LSL_RotateAround(); } 
+     LSL_DestroyTem();}//并且在这里调用后面的Rotate void吧，因为前面做过条件判断了
+    void LSL_DestroyTem() { 
+     if(IF_RotateAround==false&&TemObj!=null){
+     Destroy(TemObj.gameObject);
+     IsTemCreated=false;}}//我要销毁这个新创建的物体
+    void LSL_RotateAround(){
+    RotateAxis=new Vector3(AxisX,AxisY,AxisZ);//设定旋转方向
+    LSL_SetRadious();//设定半径的初始化
+    TemObj.RotateAround(Target_Transform.position,RotateAxis,RotateSpeed*Time.deltaTime); //虚拟物体绕着Target物体旋转
+    TemPosition=TemObj.transform.position;//虚拟物体的实时位置
+    RotatePosition=(TemPosition-Target_Transform.position).normalized*RotateRadious+Target_Transform.position;//改变环绕半径得到RotatePosition
+    OriginalPosition=RotatePosition;}//赋值给pingpong运动的起点
+    void LSL_SetRadious()
+    {if(ResetRadious==false)
+     RotateRadious=Mathf.Sqrt(Mathf.Pow((OriginalPosition.x-Target_Transform.position.x),2)+Mathf.Pow((OriginalPosition.y-Target_Transform.position.y),2)+Mathf.Pow((OriginalPosition.z-Target_Transform.position.z),2));   
+     ResetRadious=true;}
+    void LSL_Reset(){
+    Reset = true;
+    if (Reset){
+    transform.position=ResetPosition;
+    transform.rotation=ResetQUaternion;
+    Length=new Vector3(0,0,0);
+    LSL_SetOriginalPosition();
+    Reset= false;
+    ResetRadious= false;
+    ResetEverything = false;}}
+}
