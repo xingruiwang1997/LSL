@@ -164,7 +164,6 @@ public class C_TargetMove_Class : MonoBehaviour
     [SerializeField] private bool ResetEverything = false;//[√]一个还原初始位置的按钮 摁这个按钮用来重置位置
     private bool Reset = false;//[√]
     private Quaternion ResetQUaternion;//[√]顺便把旋转角也还原了
-    
     void Start()//【VOID START】
     {
     LSL_SetOriginalPosition();//[√]取得初始坐标
