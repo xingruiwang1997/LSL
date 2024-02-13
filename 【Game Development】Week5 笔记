@@ -1,0 +1,36 @@
+public class C_TopDownCharacterMove : MonoBehaviour//需要角色(填入Script)，指示物，地板 至少3个GameObject
+{
+    [SerializeField] private GameObject MyPoint;//我的指示物
+    [SerializeField] private float MyCharacterSpeed=5f;//我的速度
+    private Vector3 NewPointPosition;//我的新位置
+    private Vector3 NewCharacterPosition;//主角要去的位置
+
+    private void Start(){
+        MyPoint.SetActive(false);}
+
+    void Update(){
+        MovePoint();//移动点的位置
+        MoveCharacter();}//移动物体的位置
+    
+    void MovePoint() { 
+        if(Input.GetMouseButton(0))//这个是鼠标左键0的意思
+        { 
+            MyPoint.SetActive(true);
+            Ray Myray = Camera.main.ScreenPointToRay(Input.mousePosition);//创建一个从摄像机发出并穿过鼠标在屏幕上的位置的射线
+            if(Physics.Raycast(Myray,out RaycastHit MyMousePosition))//out RaycastHit hitInfo 是一个输出参数，如果射线碰撞到了物体，那么这个参数将包含碰撞的详细信息，例如碰撞点的位置、碰撞物体的表面法线方向等
+            {
+                if (MyMousePosition.transform.CompareTag("LSL_Ground"))
+                    { 
+                    NewPointPosition=new Vector3(MyMousePosition.point.x,0,MyMousePosition.point.z); //赋值指示物的位置        
+                    MyPoint.transform.position=NewPointPosition;
+                    }
+            }
+        }NewCharacterPosition=new Vector3(NewPointPosition.x,transform.position.y,NewPointPosition.z);}//赋值物体的新位置
+    void MoveCharacter(){ 
+        transform.position=Vector3.MoveTowards(transform.position,NewCharacterPosition,MyCharacterSpeed*Time.deltaTime);//from,to,speed格式的MoveTowards代码
+        transform.LookAt(NewCharacterPosition);
+        if(transform.position.x==NewPointPosition.x)MyPoint.SetActive(false);//当物体到达指定位置，我们再让指示物消失
+        }
+}
+//Invoke语句==Delay的用法，因为我魔改时没有用到这个逻辑，所以略
+//Invoke(methodName:"VOID的名字，是string格式",time:0.2f);再填入时间，就是Delay的用法了
